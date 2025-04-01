@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clasificador de Bigote y Género</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #predictionResult { margin: 20px 0; padding: 10px; border: 1px solid #ddd; }
+        #feedbackForm { display: none; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Sube una foto para analizar</h1>
+    <input type="file" id="imageUpload" accept="image/*">
+    <button onclick="predict()">Predecir</button>
+    
+    <div id="predictionResult"></div>
+    <img id="previewImage" style="max-width: 300px; display: none;">
+    
+    <form id="feedbackForm">
+        <h3>¿La predicción fue correcta?</h3>
+        <label>
+            <input type="checkbox" id="correctMustache">
+            Tiene bigote
+        </label><br>
+        <label>
+            <input type="checkbox" id="correctGender">
+            Es hombre
+        </label><br>
+        <button type="button" onclick="sendFeedback()">Enviar Corrección</button>
+    </form>
+
+    <script>
+        let currentImage = null;
+        
+        async function predict() {
+            const fileInput = document.getElementById('imageUpload');
+            if (!fileInput.files[0]) return alert('Selecciona una imagen');
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch('/predict', { method: 'POST', body: formData });
+                const result = await response.json();
+                
+                document.getElementById('predictionResult').innerHTML = `
+                    <strong>Predicción:</strong><br>
+                    Bigote: ${result.has_mustache ? 'Sí' : 'No'}<br>
+                    Género: ${result.is_male ? 'Hombre' : 'Mujer'}
+                `;
+                
+                const imgPreview = document.getElementById('previewImage');
+                imgPreview.src = result.image_url;
+                imgPreview.style.display = 'block';
+                
+                document.getElementById('feedbackForm').style.display = 'block';
+                currentImage = result.image_url;
+            } catch (error) {
+                alert('Error al procesar la imagen');
+            }
+        }
+        
+        async function sendFeedback() {
+            const data = {
+                image_url: currentImage,
+                correct_mustache: document.getElementById('correctMustache').checked,
+                correct_gender: document.getElementById('correctGender').checked
+            };
+            
+            try {
+                await fetch('/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                alert('¡Gracias por tu feedback!');
+            } catch (error) {
+                alert('Error al enviar corrección');
+            }
+        }
+    </script>
+</body>
+</html>
