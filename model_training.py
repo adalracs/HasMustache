@@ -53,7 +53,7 @@ def create_data_generator(data_dir, augment=False, batch_size=16):
 
     return datagen.flow_from_directory(
         data_dir,
-        target_size=(128, 128),
+        target_size=(256, 256),
         batch_size=batch_size,
         class_mode='categorical',  # Para clasificación multi-etiqueta
         classes=['mustache_male', 'mustache_female', 'no_mustache_male', 'no_mustache_female'],
@@ -63,7 +63,7 @@ def create_data_generator(data_dir, augment=False, batch_size=16):
 def build_model():
     """Construye el modelo CNN ligero"""
     model = Sequential([
-        Conv2D(32, (3,3), activation='relu', input_shape=(128, 128, 3)),
+        Conv2D(32, (3,3), activation='relu', input_shape=(256, 256, 3)),
         MaxPooling2D(2,2),
         Conv2D(64, (3,3), activation='relu'),
         MaxPooling2D(2,2),
