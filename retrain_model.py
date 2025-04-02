@@ -30,8 +30,8 @@ import os
 
 # Directorios (consistentes con app.py y model_training.py)
 NEW_DATA_DIR = 'new_data'  # Subdirectorios: mustache_male/, no_mustache_female/, etc.
-MODEL_PATH = 'models/modelo_inicial.h5'
-SAVE_PATH = 'models/modelo_actualizado.h5'
+MODEL_PATH = 'models/modelo_inicial.keras'
+SAVE_PATH = 'models/modelo_actualizado.keras'
 
 def create_generator():
     """Generador para datos nuevos (con aumentación mínima)"""
@@ -42,7 +42,7 @@ def create_generator():
     )
     return datagen.flow_from_directory(
         NEW_DATA_DIR,
-        target_size=(128, 128),
+        target_size=(256, 256),
         batch_size=4,  # Batch pequeño para fine-tuning
         class_mode='categorical',
         shuffle=True
@@ -77,7 +77,7 @@ def retrain():
     y_true = train_generator.classes
     y_pred = model.predict(train_generator).argmax(axis=1)
     
-    print("\n📊 Métricas después del fine-tuning:")
+    print("\n Métricas después del fine-tuning:")
     print(classification_report(y_true, y_pred, target_names=train_generator.class_indices.keys()))
     print("Matriz de Confusión:\n", confusion_matrix(y_true, y_pred))
 
