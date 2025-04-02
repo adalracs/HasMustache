@@ -7,7 +7,7 @@ Copyright 2025 Andrés Riascos (adalracs@gmail.com)
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
+ 
     http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
@@ -25,7 +25,7 @@ Date: April 1, 2025
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 import os
 import numpy as np
@@ -37,7 +37,7 @@ DATA_PATHS = {
     'validation': 'data/validation'  # Misma estructura que train/
 }
 
-def create_data_generator(data_dir, augment=False, batch_size=8):
+def create_data_generator(data_dir, augment=False, batch_size=16):
     """Crea generador de imágenes con o sin aumentación de datos"""
     if augment:
         datagen = ImageDataGenerator(
@@ -63,17 +63,21 @@ def create_data_generator(data_dir, augment=False, batch_size=8):
 def build_model():
     """Construye el modelo CNN ligero"""
     model = Sequential([
-        Conv2D(16, (3,3), activation='relu', input_shape=(128, 128, 3)),
+        Conv2D(32, (3,3), activation='relu', input_shape=(128, 128, 3)),
         MaxPooling2D(2,2),
-        Conv2D(32, (3,3), activation='relu'),
+        Conv2D(64, (3,3), activation='relu'),
         MaxPooling2D(2,2),
+        Conv2D(128, (3, 3), activation='relu'),  # Capa convolucional adicional
+        MaxPooling2D(2, 2),
         Flatten(),
-        Dense(32, activation='relu'),
-        Dense(4, activation='softmax')  # 4 clases: mustache_male, mustache_female, etc.
+        Dense(128, activation='relu'),
+        Dropout(0.5),  # Regularización Dropout
+        Dense(64, activation='relu'),  # Capa densa adicional
+        Dense(4, activation='softmax')# 4 clases: mustache_male, mustache_female, etc.
     ])
 
     model.compile(
-        optimizer=Adam(learning_rate=0.001),
+        optimizer=Adam(learning_rate=0.00001),
         loss='categorical_crossentropy',
         metrics=[
             'accuracy',
@@ -104,7 +108,7 @@ def train():
     callbacks = [
         tf.keras.callbacks.EarlyStopping(patience=3, monitor='val_loss'),
         tf.keras.callbacks.ModelCheckpoint(
-            'models/modelo_inicial.h5',
+            'models/modelo_inicial.keras',
             save_best_only=True,
             monitor='val_accuracy'
         )
@@ -115,13 +119,13 @@ def train():
         train_generator,
         steps_per_epoch=train_generator.samples // train_generator.batch_size,
         validation_data=val_generator,
-        epochs=15,
+        epochs=50,
         callbacks=callbacks,
         verbose=1
     )
 
     # Guardar modelo y métricas
-    model.save('models/modelo_inicial.h5')
+    model.save('models/modelo_inicial.keras')
     evaluate_model(model, val_generator)
 
 if __name__ == '__main__':
